@@ -1,116 +1,44 @@
 import { useEffect, useState } from 'react'
 import supabase from './supabase'
+import { Auth } from '@supabase/auth-ui-react'
+import { ThemeSupa } from '@supabase/auth-ui-shared'
 
 import './App.css'
 
 function App() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [signedIn, setSignedIn] = useState(false)
-  const [error, setError] = useState('')
+  const [session, setSession] = useState(null)
 
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
-        setSignedIn(session?.user?.email)
+        setSession(session)
       }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  const signUp = async (e) => {
-    e.preventDefault()
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-
-    if (error) {
-      console.log(error)
-      setError(error.message)
-    }
-
-    if (data) {
-      const { id, email } = data.user
-
-      const { error } = await supabase
-        .from('users')
-        .insert({ id, email, username: 'Dragos' })
-
-      setEmail('')
-      setPassword('')
-      setError('')
-
-      if (error) {
-        console.log(error)
-      }
-    }
-  }
-
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
-
-    setSignedIn(false)
-
     if (error) {
-      console.log(error)
-      setError(error.message)
+      console.log('Error logging out:', error.message)
+    } else {
+      setSession(null)
     }
   }
 
-  const signIn = async (e) => {
-    e.preventDefault()
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    setEmail('')
-    setPassword('')
-    setError('')
-
-    if (error) {
-      console.log(error)
-      setError(error.message)
-    }
+  if (!session) {
+    return (<Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />)
   }
-
-  if (signedIn) {
+  else {
     return <>
-      <p>Already signed in: {signedIn}</p>
+      <p>Logged in as {session?.user?.email}</p>
       <button onClick={signOut}>Sign out</button>
     </>
-  } else {
-    return (
-      <>
-        <p>{error}</p>
-        <form>
-          <div>
-            <input
-              type="email"
-              placeholder="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div>
-            <input
-              type="password"
-              placeholder="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <div>
-            <button onClick={signUp}>sign up</button>
-            <button onClick={signIn}>sign in</button>
-          </div>
-        </form>
-      </>
-    )
   }
 }
 
