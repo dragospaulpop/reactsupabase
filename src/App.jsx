@@ -15,6 +15,14 @@ function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
+        const { id, email } = session.user
+
+        const { error } = await supabase.from('users').upsert({ id, email, username: 'Dragos' })
+
+        if (error) {
+          console.log('Error updating user:', error.message)
+        }
+
         setSession(session)
       }
     })
