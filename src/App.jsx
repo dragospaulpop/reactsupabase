@@ -15,13 +15,16 @@ function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
-        const { id, email } = session.user
+        // handled by trigger, so no longer needed
+        // see auth_trigger.txt for reference
 
-        const { error } = await supabase.from('users').upsert({ id, email, username: 'Dragos' })
+        // const { id, email } = session.user
 
-        if (error) {
-          console.log('Error updating user:', error.message)
-        }
+        // const { error } = await supabase.from('users').upsert({ id, email, username: 'Dragos' })
+
+        // if (error) {
+        //   console.log('Error updating user:', error.message)
+        // }
 
         setSession(session)
       }

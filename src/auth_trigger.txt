@@ -1,0 +1,43 @@
+-- Hello,
+
+-- I managed to solve that trigger issue with Supabase from yesterday. Ma gandeam ca poate e de interes.
+-- It's all about roles and security and stuff.
+
+-- 1. Create a function (Database -> function -> create a new function)
+
+    BEGIN
+        INSERT INTO public.users (id, username, email)
+        VALUES(NEW.id, 'Dragos', NEW.email);
+        RETURN NEW;
+    END;
+
+-- 2. Create a trigger that runs the function after a row is create in the auth.users table:
+
+    CREATE TRIGGER copy_user_trigger
+    AFTER INSERT ON auth.users FOR EACH ROW
+    EXECUTE FUNCTION copy_user_data ();
+
+-- With RLS diabled on the public.users table:
+-- 1. Grant appropriate permissions on public.user to the user that creates the record in auth.users (supabase_auth_admin):
+
+    GRANT INSERT ON public.users TO supabase_auth_admin;
+
+-- With RLS enabled on the public.users table:
+-- 1. Create a policy that allows the supabase_auth_admin to insert rows into the puiblic.users table:
+
+    CREATE POLICY insert_policy ON public.users
+        FOR INSERT TO supabase_auth_admin
+        WITH CHECK (true);
+
+
+-- Cum am gasit userul? Logs -> Postgres -> Click on the permission denied error, look at user_name.
+
+-- Have fun!
+
+
+-- For reference, the public.users schema is:
+-- id uuid primary key foreign key from auth.users.id with on delete cascade
+-- create_at timestamp default now()
+-- username varchar
+-- email varchar
+-- avatar varchar
