@@ -17,5 +17,5 @@
 
    Create a file named ".env" in the root directory of your project. Add the following lines to it:
 
-   VITE_SUPABASE_URL="your project url"
-   VITE_SUPABASE_KEY="your anon public key"
+VITE_SUPABASE_URL="your project url"
+VITE_SUPABASE_KEY="your anon public key"
